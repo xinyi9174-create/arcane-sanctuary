@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arcane Sanctuary - 魔女的秘密阁楼</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Noto+Serif+SC:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #05020a;
+            --bg-card: rgba(15, 8, 25, 0.88);
+            --border-witch: rgba(212, 175, 55, 0.45);
+            --text-main: #f4ecd8;
+            --text-muted: #b8a9c9;
+            --accent-purple: #9b30ff;
+            --accent-crimson: #c71585;
+            --accent-gold: #e5c158;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Noto Serif SC', serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        /* 哥特夜空与城堡背景底色特效 */
+        .ambient-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: 
+                radial-gradient(circle at 50% 20%, rgba(90, 25, 110, 0.25) 0%, transparent 60%),
+                linear-gradient(180deg, #030107 0%, #0c0414 45%, #180828 100%);
+            z-index: 0;
+        }
+        /* 远处哥特城堡剪影 */
+        .castle-silhouette {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 35vh;
+            background: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200&auto=format&fit=crop') no-repeat center bottom / cover;
+            opacity: 0.18;
+            mix-blend-mode: luminosity;
+            z-index: 0;
+            pointer-events: none;
+        }
+        /* 巨型血月 */
+        .moon {
+            position: fixed; top: 25px; right: 30px; width: 75px; height: 75px;
+            background: radial-gradient(circle at 35% 35%, #fffdf0 0%, #e2d19f 50%, #9e3668 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 40px rgba(199, 21, 133, 0.5), 0 0 15px rgba(229, 193, 88, 0.8);
+            z-index: 0;
+        }
+        /* 顶部悬浮导航 */
+        .witch-nav {
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 6px; padding: 5px 12px; z-index: 1000;
+            background: rgba(12, 5, 20, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-witch);
+            border-radius: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.8);
+        }
+        .nav-item {
+            font-family: 'Cinzel', serif; color: var(--text-muted);
+            text-decoration: none; font-size: 0.7rem; padding: 6px 12px;
+            border-radius: 15px; cursor: pointer; transition: 0.3s;
+            letter-spacing: 1px;
+        }
+        .nav-item.active { color: var(--accent-gold); background: rgba(155, 48, 255, 0.25); text-shadow: 0 0 8px rgba(229,193,88,0.6); }
+
+        .container { position: relative; z-index: 10; max-width: 680px; margin: 85px auto 40px; padding: 0 15px; }
+        .view-section { display: none; animation: fadeIn 0.4s ease; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 哥特精美边框卡片 */
+        .lace-border {
+            background: var(--bg-card);
+            border: 1px solid var(--border-witch);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 25px rgba(107, 33, 168, 0.25), inset 0 0 20px rgba(0,0,0,0.7);
+            position: relative;
+            overflow: hidden;
+        }
+        .lace-border::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+        }
+
+        /* 主页魔女形象展示区 */
+        .hero-banner { text-align: center; padding: 15px 10px 25px; }
+        .witch-avatar-container {
+            position: relative;
+            width: 130px; height: 130px; margin: 0 auto 18px;
+        }
+        .witch-avatar {
+            width: 100%; height: 100%; border-radius: 50%;
+            background: url('https://images.unsplash.com/photo-1563089145-599997674d42?q=80&w=600&auto=format&fit=crop') center/cover;
+            border: 2px solid var(--accent-gold);
+            box-shadow: 0 0 30px rgba(155, 48, 255, 0.6), 0 0 10px rgba(199, 21, 133, 0.8);
+            position: relative; z-index: 2;
+        }
+        .witch-avatar-glow {
+            position: absolute; top: -8px; left: -8px; right: -8px; bottom: -8px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, var(--accent-gold), var(--accent-crimson), var(--accent-purple), var(--accent-gold));
+            z-index: 1; opacity: 0.6;
+            animation: rotateGlow 8s linear infinite;
+        }
+        @keyframes rotateGlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        h1, h2, h3 { font-family: 'Cinzel', serif; color: var(--accent-gold); letter-spacing: 1px; }
+        .hero-banner h1 { font-size: 1.6rem; margin-bottom: 6px; text-shadow: 0 0 10px rgba(229,193,88,0.4); }
+        .castle-tagline {
+            font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;
+            border-top: 1px dashed rgba(212, 175, 55, 0.2);
+            border-bottom: 1px dashed rgba(212, 175, 55, 0.2);
+            padding: 10px 0; margin-top: 10px;
+        }
+
+        /* 传送门网格 */
+        .portal-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        .portal-card { 
+            text-align: center; cursor: pointer; padding: 22px 15px; 
+            transition: 0.3s transform, 0.3s border-color, 0.3s background;
+        }
+        .portal-card:active { transform: scale(0.97); }
+        .portal-card:hover { border-color: var(--accent-gold); background: rgba(30, 15, 45, 0.9); }
+        .portal-card h3 { font-size: 1rem; margin-bottom: 6px; color: var(--text-main); }
+        .portal-card p { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* 通用按钮 */
+        .witch-btn {
+            background: linear-gradient(135deg, rgba(155, 48, 255, 0.35), rgba(199, 21, 133, 0.35));
+            border: 1px solid var(--border-witch); color: var(--text-main);
+            padding: 8px 18px; border-radius: 20px; cursor: pointer;
+            font-family: 'Cinzel', serif; font-size: 0.8rem; margin: 5px;
+            transition: 0.2s;
+        }
+        .witch-btn:active { transform: scale(0.95); background: rgba(155, 48, 255, 0.6); }
+
+        /* 各个模块内部组件 */
+        .checklist-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 15px; background: rgba(20, 10, 32, 0.7);
+            border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 10px;
+            margin-bottom: 10px; font-size: 0.85rem; cursor: pointer;
+        }
+        .checklist-item.checked { border-color: var(--accent-gold); text-decoration: line-through; color: var(--text-muted); background: rgba(35, 18, 55, 0.4); }
+        .witch-checkbox { width: 20px; height: 20px; border: 2px solid var(--border-witch); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .checklist-item.checked .witch-checkbox { background: var(--accent-gold); box-shadow: 0 0 8px var(--accent-gold); }
+        
+        .count-num { font-size: 2.8rem; color: var(--accent-crimson); margin: 12px 0; font-family: 'Cinzel', serif; text-shadow: 0 0 15px rgba(199,21,133,0.4); }
+        .witch-textarea {
+            width: 100%; background: rgba(8, 3, 15, 0.9);
+            border: 1px solid var(--border-witch); border-radius: 8px;
+            padding: 12px; color: var(--text-main); font-size: 0.85rem; margin-top: 10px;
+            resize: none; height: 90px;
+        }
+        .water-bottle {
+            width: 75px; height: 160px; margin: 15px auto;
+            border: 2px solid var(--border-witch); border-radius: 0 0 25px 25px;
+            position: relative; overflow: hidden; background: rgba(10, 4, 18, 0.6);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+        .water-level {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 50%;
+            background: linear-gradient(180deg, rgba(155, 48, 255, 0.7), rgba(70, 130, 180, 0.7));
+            transition: height 0.3s ease;
+        }
+        .pearl-dot { display: inline-block; width: 4px; height: 4px; background: var(--accent-gold); border-radius: 50%; margin: 0 6px; vertical-align: middle; }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+    <div class="castle-silhouette"></div>
+    <div class="moon"></div>
+
+    <nav class="witch-nav">
+        <a class="nav-item active" onclick="switchView('home', this)">HOME</a >
+        <a class="nav-item" onclick="switchView('memory', this)">MEMORY</a >
+        <a class="nav-item" onclick="switchView('life', this)">LIFE</a >
+        <a class="nav-item" onclick="switchView('toy', this)">TOY</a >
+        <a class="nav-item" onclick="switchView('meals', this)">MEALS</a >
+    </nav>
+
+    <div class="container">
+        <!-- HOME 主页 -->
+        <section id="view-home" class="view-section active">
+            <div class="hero-banner lace-border">
+                <div class="witch-avatar-container">
+                    <div class="witch-avatar-glow"></div>
+                    <div class="witch-avatar"></div>
+                </div>
+                <h1>Arcane Sanctuary</h1>
+                <div class="castle-tagline">
+                    暗夜月色低语，哥特城堡深处的私人圣殿。<span class="pearl-dot"></span>记录永恒时光与私密修炼日常。
+                </div>
+            </div>
+            <div class="portal-grid">
+                <div class="portal-card lace-border" onclick="switchView('memory', document.querySelectorAll('.nav-item')[1])">
+                    <h3>MEMORY</h3>
+                    <p>时光倒计时与永恒编年</p >
+                </div>
+                <div class="portal-card lace-border" onclick="switchView('life', document.querySelectorAll('.nav-item')[2])">
+                    <h3>LIFE</h3>
+                    <p>魔女修炼与每日仪式</p >
+                </div>
+                <div class="portal-card lace-border" onclick="switchView('toy', document.querySelectorAll('.nav-item')[3])">
+                    <h3>TOY</h3>
+                    <p>私密圣物与欢愉频次</p >
+                </div>
+                <div class="portal-card lace-border" onclick="switchView('meals', document.querySelectorAll('.nav-item')[4])">
+                    <h3>MEALS</h3>
+                    <p>夜宴膳食与月泉水补给</p >
+                </div>
+            </div>
+        </section>
+
+        <!-- MEMORY 模块 -->
+        <section id="view-memory" class="view-section">
+            <div class="lace-border" style="text-align:center;">
+                <h2>MEMORY CHRONICLE</h2>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">记录属于你的无声时刻</p >
+                <div style="font-size: 2.5rem; color:var(--accent-gold); margin:20px 0; font-family:'Cinzel';" id="stopwatch">00:00:00</div>
+                <button class="witch-btn" onclick="startTimer()">启动</button>
+                <button class="witch-btn" onclick="pauseTimer()">暂停</button>
+                <button class="witch-btn" onclick="resetTimer()">重置</button>
+            </div>
+        </section>
+
+        <!-- LIFE 模块 -->
+        <section id="view-life" class="view-section">
+            <div class="lace-border">
+                <h2>LIFE RITUALS</h2>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-top:5px; margin-bottom:15px;">每日必修的优雅功课</p >
+                <div>
+                    <div class="checklist-item" onclick="this.classList.toggle('checked')">
+                        <span>晨间魔女瑜伽与冥想</span><div class="witch-checkbox"></div>
+                    </div>
+                    <div class="checklist-item" onclick="this.classList.toggle('checked')">
+                        <span>城堡长廊优雅步态与核心训练</span><div class="witch-checkbox"></div>
+                    </div>
+                    <div class="checklist-item" onclick="this.classList.toggle('checked')">
+                        <span>草本茶汤熬制与精油熏香</span><div class="witch-checkbox"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TOY 模块 -->
+        <section id="view-toy" class="view-section">
+            <div class="lace-border" style="text-align:center;">
+                <h2>SECRET TOY</h2>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">私密圣物频次与心境记录</p >
+                <div class="count-num" id="toy-count">07</div>
+                <div>
+                    <button class="witch-btn" onclick="changeToy(1)">注入能量 (+)</button>
+                    <button class="witch-btn" onclick="changeToy(-1)">回收 (-)</button>
+                </div>
+                <textarea class="witch-textarea" placeholder="记录此刻的酥麻感受、私密触感与月夜心境..."></textarea>
+            </div>
+        </section>
+
+        <!-- MEALS 模块 -->
+        <section id="view-meals" class="view-section">
+            <div class="lace-border" style="text-align:center;">
+                <h2>NOCTURNAL FEAST</h2>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">月泉水生命之源补给</p >
+                <p style="font-size:0.85rem; margin:10px 0;">当前储量: <span id="water-txt" style="color:var(--accent-gold); font-size:1.1rem; font-family:'Cinzel';">1200</span> ml</p >
+                <div class="water-bottle"><div class="water-level" id="water-bar" style="height: 48%;"></div></div>
+                <button class="witch-btn" style="margin-top:15px;" onclick="drinkWater()">饮用月泉水 (+300ml)</button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        function switchView(name, el) {
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+            document.getElementById('view-' + name).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            if(el) el.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        let t = 0, timerObj = null;
+        function startTimer() {
+            if(timerObj) return;
+            timerObj = setInterval(() => {
+                t++;
+                let h = String(Math.floor(t/3600)).padStart(2,'0');
+                let m = String(Math.floor((t%3600)/60)).padStart(2,'0');
+                let s = String(t%60).padStart(2,'0');
+                document.getElementById('stopwatch').innerText = `${h}:${m}:${s}`;
+            }, 1000);
+        }
+        function pauseTimer() { clearInterval(timerObj); timerObj = null; }
+        function resetTimer() { pauseTimer(); t=0; document.getElementById('stopwatch').innerText = "00:00:00"; }
+
+        let count = 7;
+        function changeToy(n) { 
+            count = Math.max(0, count + n); 
+            document.getElementById('toy-count').innerText = String(count).padStart(2,'0'); 
+        }
+
+        let water = 1200;
+        function drinkWater() {
+            water += 300;
+            document.getElementById('water-txt').innerText = water;
+            let percent = Math.min(100, (water / 2500) * 100);
+            document.getElementById('water-bar').style.height = percent + '%';
+        }
+    </script>
+</body>
+</html>
